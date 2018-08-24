@@ -22,6 +22,11 @@ def main(args):
 
 if __name__ == "__main__":
     args, unparsed = config.get_args()
+    args.shared_max_step = 1
+    args.controller_max_step = 1
+    args.max_epoch = 2
+    args.save_epoch=1
     main(args)
+    print('end')
     # dataset = data.text.Corpus('data/ptb')
 

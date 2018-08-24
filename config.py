@@ -123,14 +123,15 @@ learn_arg.add_argument('--derive_num_sample', type=int, default=100)
 misc_arg = add_argument_group('Misc')
 misc_arg.add_argument('--load_path', type=str, default='')
 misc_arg.add_argument('--log_step', type=int, default=50)
-misc_arg.add_argument('--save_epoch', type=int, default=4)
+misc_arg.add_argument('--save_epoch', type=int, default=10)
 misc_arg.add_argument('--max_save_num', type=int, default=4)
 misc_arg.add_argument('--log_level', type=str, default='INFO', choices=['INFO', 'DEBUG', 'WARN'])
 misc_arg.add_argument('--log_dir', type=str, default='logs')
 misc_arg.add_argument('--data_dir', type=str, default='data')
-misc_arg.add_argument('--num_gpu', type=int, default=0)
+misc_arg.add_argument('--num_gpu', type=int, default=1)
 misc_arg.add_argument('--random_seed', type=int, default=12345)
 misc_arg.add_argument('--use_tensorboard', type=str2bool, default=True)
+misc_arg.add_argument('--gpu', type=int, default=0)
 
 
 def get_args():
@@ -139,9 +140,10 @@ def get_args():
     """
     args, unparsed = parser.parse_known_args()
 
+
     if torch.cuda.is_available():
         setattr(args, 'cuda', True)
-        setattr(args, 'device', 'cuda')
+        setattr(args, 'device', f'cuda:{args.gpu}')
     else:
         setattr(args, 'cuda', False)
         setattr(args, 'device', 'cpu')

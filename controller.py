@@ -81,7 +81,7 @@ class Controller(torch.nn.Module):
         # exploration: tanh의 효과, tanh_c -1, 1이 아닌 더 큰 세팅을 원해서
         # tanh_c 2.5 를 봤다더라 ....ㅋㅋㅋ
         if self.args.mode == 'train':
-            logits = (self.args.tanh_c * F.tanh(logits))
+            logits = (self.args.tanh_c * torch.tanh(logits))
 
         return logits, (hx, cx)
 
@@ -89,8 +89,7 @@ class Controller(torch.nn.Module):
         assert batch_size >= 1
 
         # [B, L, H]
-        tmp = torch.Tensor([self.num_total_tokens-1]).long()
-        inputs = utils.get_variable(tmp, requires_grad=False)
+        inputs = torch.Tensor([self.num_total_tokens-1]).to(self.args.device).long()
         hidden = None
 
         activations = []
@@ -106,7 +105,9 @@ class Controller(torch.nn.Module):
             entropy = -(log_prob * probs).sum(1, keepdim=False)  # ????????
 
             action = probs.multinomial(num_samples=1).data
-            selected_log_prob = log_prob.gather(1, utils.get_variable(action, requires_grad=False))
+
+            selected_log_prob = log_prob.gather(
+                1, utils.get_variable(action, requires_grad=False))
 
             entropies.append(entropy)
             log_probs.append(selected_log_prob[:, 0])
@@ -128,10 +129,8 @@ class Controller(torch.nn.Module):
         # 나중에 사용
         if save_dir is not None:
             for idx, dag in enumerate(dags):
-                utils.draw_network(dag,
-                                   os.path.join(save_dir, f'graph{idx}.png'))
+                utils.draw_network(dag, os.path.join(save_dir, f'graph{idx}.png'))
 
-        # 다시 확인
         if with_details:
             return dags, torch.cat(log_probs), torch.cat(entropies)
 
@@ -141,4 +140,11 @@ class Controller(torch.nn.Module):
 
 if __name__ == '__main__':
     args, _ = config.get_args()
-    print(args.num_gpu, args.cuda)
+    c = Controller(args)
+    dags = c.sample()
+    print(len(dags))
+    path = 'sample_model/'
+
+    path = os.path.join(path,  'test.png')
+
+    utils.draw_network(dags[0], path)
